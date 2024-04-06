@@ -1,0 +1,18 @@
+@server = http://localhost:4004
+
+###POST
+POST {{server}}/innvotrack/insertData
+Content-Type: application/json
+
+{
+    "tableName": "INNOVAPTE_INNOVTRACK_TIVE_HENKEL",
+    "data":"[{\"Device\":\"K294563\",\"Date\":\"2023-12-26\",\"Time\":\"02:14:47\",\"Latitude\":\"43.545435\",\"Longitude\":\"-79.624133\",\"Address\":\"1029 S Sheridan Way, Mississauga, ON L5H 3T6, Canada\",\"Temperature\":\"21.80\",\"TempUOM\":\"C\",\"Humidity\":\"34.30\",\"DewPoint\":\"\",\"Battery\":\"100\"}]"
+}
+
+###POST
+POST {{server}}/innvotrack/triggerMail
+Content-Type: application/json
+
+###POST
+POST {{server}}/v2/odata/v4/innvotrack/UpdateDeviceData
+Content-Type: application/json

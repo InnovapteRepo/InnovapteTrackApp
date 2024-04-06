@@ -1,0 +1,47 @@
+{
+  "xsappname": "innovaptetrackapp",
+  "tenant-mode": "dedicated",
+  "description": "Security profile of called application",
+  "scopes": [
+    {
+      "name": "uaa.user",
+      "description": "UAA"
+    },
+    {
+      "name": "$XSAPPNAME.Read",
+      "description": "Read"
+    },
+    {
+      "name": "$XSAPPNAME.Update",
+      "description": "Read and Update"
+    },
+    {
+      "name": "$XSAPPNAME.Create",
+      "description": "Read and Create"
+    },
+    {
+      "name": "$XSAPPNAME.Delete",
+      "description": "Read and Delete"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Token_Exchange",
+      "description": "UAA",
+      "scope-references": [
+        "uaa.user"
+      ]
+    },
+    {
+      "name": "innohenkel_Admin",
+      "description": "all roles",
+      "scope-references":[
+        "uaa.user",
+        "$XSAPPNAME.Read",
+        "$XSAPPNAME.Update",
+        "$XSAPPNAME.Create",
+        "$XSAPPNAME.Delete"
+      ]
+    }
+  ]
+}
