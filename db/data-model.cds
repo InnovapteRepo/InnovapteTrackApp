@@ -8,7 +8,7 @@ using {
 entity TiveDevice {
   key DeviceId   : String(15);
   key DeviceName : String(7);
-      Delivery   : String(25);
+  key Delivery   : String(25);
 }
 
 entity TiveData : managed {
@@ -16,13 +16,13 @@ entity TiveData : managed {
   key deviceId    : String(15); //'865648068675040'
   key date        : Date;
   key time        : Time;
-      latitude    : Decimal(4, 2);
-      longitude   : Decimal(4, 2);
+      latitude    : Decimal(8, 5);
+      longitude   : Decimal(8, 5);
       location    : String(250); //'R762+6X Surčin, Serbia'
-      humidity    : Decimal(4, 2);
       temperature : Decimal(4, 2); //65.0960922241211
-      dewPoint    : Decimal(4, 2);
+      dewPoint    : Decimal(3, 1);
       battery     : Integer; //9
+      humidity    : Decimal(4, 2);
 }
 
 
@@ -250,4 +250,9 @@ entity Asset_Attribute_History {
 }
 
 view Delivery as select key Delivery from innovtrack.TiveDevice;
-view Device as select key DeviceName, Delivery from innovtrack.TiveDevice;
+
+view Device as
+  select
+    key DeviceName,
+        Delivery
+  from innovtrack.TiveDevice;

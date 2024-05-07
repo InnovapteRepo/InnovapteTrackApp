@@ -14,5 +14,5 @@ POST {{server}}/innvotrack/triggerMail
 Content-Type: application/json
 
 ###POST
-POST {{server}}/v2/odata/v4/innvotrack/UpdateDeviceData
+POST {{server}}/v2/odata/v4/innvotrack/UpdateDeviceData()
 Content-Type: application/json

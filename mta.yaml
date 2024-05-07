@@ -23,9 +23,9 @@ modules:
   type: hdb
   path: gen/db
   requires:
-    - name: InnovapteTrackApp-db
-      properties:
-        TARGET_CONTAINER: ZINNOVAPTE_INNOVTRACK
+  - name: InnovapteTrackApp-db
+    properties:
+      TARGET_CONTAINER: ZINNOVAPTE_INNOVTRACK
   parameters:
     buildpack: nodejs_buildpack
 - name: InnovapteTrackApp-destination-content
@@ -72,9 +72,23 @@ modules:
       - innoiotdevicereportfioriapp.zip
       name: innoiotdevicereportfioriapp
       target-path: resources/
+    - artifacts:
+      - innodevicedetailfioriapp.zip
+      name: innodevicedetailfioriapp
+      target-path: resources/
 - name: innoiotdevicereportfioriapp
   type: html5
   path: app/iotdevicereportfioriapp
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: innodevicedetailfioriapp
+  type: html5
+  path: app/devicedetailfioriapp
   build-parameters:
     build-result: dist
     builder: custom
@@ -94,20 +108,20 @@ resources:
   type: com.sap.xs.hdi-container
   parameters:
     service: hana
-    service-plan: hdi-shared
     service-name: ZINNOVAPTE_INNOVTRACK
+    service-plan: hdi-shared
 - name: InnovapteTrackApp_html_repo_host
   type: org.cloudfoundry.managed-service
   parameters:
     service: html5-apps-repo
-    service-plan: app-host
     service-name: InnovapteTrackApp-html5-app-host-service
+    service-plan: app-host
 - name: InnovapteTrackApp-connectivity-service
   type: org.cloudfoundry.managed-service
   parameters:
     service: connectivity
     service-name: InnovapteTrackApp-connectivity-service
-    service-plan: lite    
+    service-plan: lite
 - name: InnovapteTrackApp-destination-service
   type: org.cloudfoundry.managed-service
   parameters:
@@ -127,14 +141,14 @@ resources:
             Name: InnovapteTrackApp-srv-api
             ProxyType: Internet
             Type: HTTP
-            URL: ~{srv-api/srv-url}  
+            URL: ~{srv-api/srv-url}
           existing_destinations_policy: update
       version: 1.0.0
     service: destination
     service-name: InnovapteTrackApp-destination-service
     service-plan: lite
   requires:
-  - name: srv-api  
+  - name: srv-api
 parameters:
   deploy_mode: html5-repo
   enable-parallel-deployments: true

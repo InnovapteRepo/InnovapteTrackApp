@@ -1,0 +1,153 @@
+{
+    "_version": "1.59.0",
+    "sap.app": {
+        "id": "inno.devicedetailfioriapp",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:lrop",
+            "version": "1.13.2",
+            "toolsId": "07215439-a8ff-4888-a2c5-1817f98e295e"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "odata/v4/innvotrack-device-data/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "odataVersion": "4.0"
+                }
+            }
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "innovtrackdevice-display": {
+                    "semanticObject": "innovtrackdevice",
+                    "action": "display",
+                    "title": "{{flpTitle}}",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.123.1",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.ushell": {},
+                "sap.fe.templates": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "inno.devicedetailfioriapp.i18n.i18n"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {
+                    "synchronizationMode": "None",
+                    "operationMode": "Server",
+                    "autoExpandSelect": true,
+                    "earlyRequests": true
+                }
+            },
+            "@i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "uri": "i18n/i18n.properties"
+            }
+        },
+        "resources": {
+            "css": []
+        },
+        "routing": {
+            "config": {},
+            "routes": [
+                {
+                    "pattern": ":?query:",
+                    "name": "TiveDeviceList",
+                    "target": "TiveDeviceList"
+                },
+                {
+                    "pattern": "TiveDevice({key}):?query:",
+                    "name": "TiveDeviceObjectPage",
+                    "target": "TiveDeviceObjectPage"
+                }
+            ],
+            "targets": {
+                "TiveDeviceList": {
+                    "type": "Component",
+                    "id": "TiveDeviceList",
+                    "name": "sap.fe.templates.ListReport",
+                    "options": {
+                        "settings": {
+                            "contextPath": "/TiveDevice",
+                            "variantManagement": "Page",
+                            "navigation": {
+                                "TiveDevice": {
+                                    "detail": {
+                                        "route": "TiveDeviceObjectPage"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "TiveDeviceObjectPage": {
+                    "type": "Component",
+                    "id": "TiveDeviceObjectPage",
+                    "name": "sap.fe.templates.ObjectPage",
+                    "options": {
+                        "settings": {
+                            "editableHeaderContent": false,
+                            "contextPath": "/TiveDevice"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sap.fiori": {
+        "registrationIds": [],
+        "archeType": "transactional"
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "innvotrackappconfig"
+    }
+}

@@ -8,11 +8,12 @@ const { TiveDevice, TiveData } = cds.entities('innovapte.innovtrack');
 const sdk = require('api')('@tive/v3#7poyxh24lqzb8eow');
 const moment = require('moment');
 const momentzone = require('moment-timezone');
+const { clear } = require('console');
 
 
 module.exports = cds.service.impl(async function () {
 
-    
+
     this.on("insertData", async function (req) {
         try {
             let tableData = JSON.parse(req.data.data);
@@ -162,22 +163,29 @@ module.exports = cds.service.impl(async function () {
     };
 
     this.on("UpdateDeviceData", async (req) => {
+
+        var d = new Date();
+        var b = moment().add(44, 'months');
+        console.log(b);
+        let result = [];
         //get token
         sdk.postPublicV3Authenticate({
             grant_type: 'client_credentials',
             client_id: 'innovapteclientid',
             client_secret: '684da940-c26b-433c-bf1c-4c3f832b5414'
-        }).then(token => {
+        }).then(async token => {
             console.log(token);
             //get list of active shipment
             sdk.auth(token.data.access_token);
-            sdk.getShipments({ States: 'Active', 'x-tive-account-id': '2072' })
+            var response = await sdk.getShipments({ States: 'Active', 'x-tive-account-id': '2072' })
                 .then(async shipment => {
                     console.log(shipment.data.data);
+
                     for (let i = 0; i < shipment.data.data.length; i++) {
                         //get shipment tracker data
                         if (shipment.data.data.length) {
                             this.shipmentdata = shipment.data.data[i].shipmentId;
+                            // this.shipmentdata = '9013701584';
                         }
                         let Response = await getShipmentData(shipment.data.data[i].shipmentId);
                         //filter Beacon device data
@@ -193,6 +201,7 @@ module.exports = cds.service.impl(async function () {
                         var filterBecon = filterBecon.filter(object => {
                             return object.locationMethod != 'container';
                         });
+                        // let deviceid = await getDeviceDetails();
 
                         let deviceId = await cds.read(SELECT
                             .columns`DeviceId,DeviceName`
@@ -214,42 +223,76 @@ module.exports = cds.service.impl(async function () {
                             let datetime = final.split(' ');
 
                             finalpayload.delivery = shipment.data.data[i].shipmentId;
-                            finalpayload.deviceId = tivedevicename[0].DeviceName;
+                            if (tivedevicename.length) {
+                                finalpayload.deviceId = tivedevicename[0].DeviceName;
+                            } else {
+                                finalpayload.deviceId = filterBecon[j].deviceId;
+                            }
+
                             finalpayload.date = datetime[0];
                             finalpayload.time = datetime[1];
                             if (filterBecon[j].coordinates) {
-                                finalpayload.latitude = parseFloat(filterBecon[j].coordinates.latitude).toFixed(2) || '0.00';
-                                finalpayload.longitude = parseFloat(filterBecon[j].coordinates.longitude).toFixed(2) || '0.00';
+                                finalpayload.latitude = parseFloat(filterBecon[j].coordinates.latitude).toFixed(4) || '0.00000';
+                                finalpayload.longitude = parseFloat(filterBecon[j].coordinates.longitude).toFixed(4) || '0.00000';
                             }
                             finalpayload.location = filterBecon[j].location;
+
+                            //convert temperture UOM from F to C
+                            finalpayload.temperature = (filterBecon[j].temperature - 32) * 5 / 9; //convert C to F degree              
+                            //calculate dewpoint
+                            if (finalpayload.temperature && filterBecon[j].humidity)
+                                finalpayload.dewPoint = 243.04 * (Math.log(filterBecon[j].humidity / 100) + ((17.625 * finalpayload.temperature) / (243.04 + finalpayload.temperature))) / (17.625 - Math.log(filterBecon[j].humidity / 100) - ((17.625 * finalpayload.temperature) / (243.04 + finalpayload.temperature)));
+
+                            if (finalpayload.dewPoint) {
+                                finalpayload.dewPoint = parseFloat(finalpayload.dewPoint).toFixed(1);
+                            } else {
+                                finalpayload.dewPoint = '0.0';
+                            }
+
+                            if (finalpayload.temperature) {
+                                finalpayload.temperature = parseFloat(finalpayload.temperature).toFixed(2);
+                            } else {
+                                finalpayload.temperature = '0.00';
+                            }
                             if (filterBecon[j].humidity) {
-                                filterBecon[j].humidity = parseFloat(filterBecon[j].humidity).toFixed(2);
-                                finalpayload.humidity = filterBecon[j].humidity;
+                                finalpayload.humidity = parseFloat(filterBecon[j].humidity).toFixed(2);
                             } else {
                                 finalpayload.humidity = '0.00';
                             }
-                            filterBecon[j].humidity = parseFloat(filterBecon[j].temperature).toFixed(2);
-                            filterBecon[j].temperature = parseFloat(filterBecon[j].temperature).toFixed(2);
-                            //convert temperture UOM from F to C
-                            finalpayload.temperature = ((filterBecon[j].temperature - 32) * 5 / 9) ? ((filterBecon[j].temperature - 32) * 5 / 9) : '0.00'; //convert C to F degree              
-                            //calculate dewpoint
-                            filterBecon[j].dewPoint = 243.04 * (Math.log(filterBecon[j].humidity / 100) + ((17.625 * finalpayload.temperature) / (243.04 + finalpayload.temperature))) / (17.625 - Math.log(filterBecon[j].humidity / 100) - ((17.625 * finalpayload.temperature) / (243.04 + finalpayload.temperature)));
-                            finalpayload.dewPoint = filterBecon[j].dewPoint ? filterBecon[j].dewPoint : '0.00';
                             finalpayload.battery = filterBecon[j].battery;
-
                             aPayload.push(finalpayload);
+                            delete finalpayload;
                         };
 
                         //Insert in table
-                        const query = UPSERT.into(`INNOVAPTE_INNOVTRACK_TIVEDATA`, aPayload);
-                        let res = await cds.run(query).catch((error) => error);
-                        let response = '';
-                        if (res.code) {
-                            response = { code: 500, message: res.message }
+                        if (aPayload.length) {
+                            const query = UPSERT.into(`INNOVAPTE_INNOVTRACK_TIVEDATA`, aPayload);
+                            let res = await cds.run(query).catch((error) => error);
+                            // let response = [];
+                            if (res.code) {
+                                result.push({
+                                    "Code": 500,
+                                    "Msgtxt": aPayload[0].delivery + res.message,
+                                    "Msgty": 'E'
+                                });
+                                // response = { code: 500, message: res.message }
+                            } else {
+                                result.push({
+                                    "Code": 200,
+                                    "Msgtxt": aPayload[0].delivery + 'Updated',
+                                    "Msgty": 'S'
+                                });
+                            }
                         }
-                        // return JSON.stringify(response);
-
+                        else {
+                            result.push({
+                                "Code": 200,
+                                "Msgtxt": 'No Data',
+                                "Msgty": 'S'
+                            });
+                        }
                     }//for loop end
+                    return result;
                 }).catch(err => console.error(err));
         }).catch(err => console.error(err));
 
@@ -261,6 +304,15 @@ module.exports = cds.service.impl(async function () {
             .then(async result => {
                 console.log(result);
                 return result;
+            }).catch(err => console.error(err));
+        return resp;
+    }
+
+    async function getDeviceDetails() {
+        let resp = await sdk.getPublicV3Devices({ 'x-tive-account-id': '2072' })
+            .then(async device => {
+                console.log(device);
+                return device.data.data;
             }).catch(err => console.error(err));
         return resp;
     }
